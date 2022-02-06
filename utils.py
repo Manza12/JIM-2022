@@ -1,5 +1,9 @@
 import numpy as np
 from scipy.signal.windows import get_window
+import os
+import os.path as path
+from pathlib import Path
+import pickle
 
 
 def get_str_el(window, fs, n_fft, factor=1, plot=True, db=True, eps=1e-10):
@@ -34,3 +38,13 @@ def get_window_dispatch(window, n, fft_bins=True):
         Warning("You are using Kaiser window with beta factor " + str(window) + ". Correct behaviour not checked.")
     else:
         raise Exception("The function get_window from scipy only supports strings, tuples and floats.")
+
+
+def create_if_not_exists(folder: Path):
+    if not path.exists(folder):
+        os.makedirs(folder)
+
+
+def save_pickle(file_path, data):
+    with open(file_path, "wb") as fp:
+        pickle.dump(data, fp)
