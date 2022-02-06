@@ -22,7 +22,7 @@ def generate_harmonic(T, fs, N, f_0, A_0, delta):
     return t, signal
 
 
-def generate_inharmonic(T, fs, t_fft, t_hop, f_1, f_2, t_1, t_2, eta):
+def generate_inharmonic(T, fs, t_fft, t_hop, f_1, f_2, t_1, t_2, eta, shape='square'):
     # STFT parameters
     n_per_seg = int(t_fft * fs)
     n_overlap = int((t_fft-t_hop) * fs)
@@ -38,7 +38,7 @@ def generate_inharmonic(T, fs, t_fft, t_hop, f_1, f_2, t_1, t_2, eta):
 
     # Filter
     H = np.zeros_like(stft)
-    H = create_filter(H, omega, f_1, f_2, tau, t_1, t_2, eta)
+    H = create_filter(H, omega, f_1, f_2, tau, t_1, t_2, eta, shape=shape)
 
     # Multiplication
     stft *= H
@@ -49,12 +49,18 @@ def generate_inharmonic(T, fs, t_fft, t_hop, f_1, f_2, t_1, t_2, eta):
     return t, signal_inharmonic
 
 
-def create_filter(H, f, f_1, f_2, t, t_1, t_2, eta):
-    t_on = np.where(np.logical_and(t_1 <= t, t < t_2))
-    for idx_t in range(len(t_on[0])):
-        f_high = f_2 - (f_2 - f_1) * (t[idx_t] - t_1) / (t_2 - t_1)
-        H[:, idx_t] = np.logical_and(f_1 <= f, f < f_high).astype(np.float64) * np.exp(- 2 * np.pi * eta * t[idx_t])
-    return H
+def create_filter(H, f, f_1, f_2, t, t_1, t_2, eta, shape='triangle'):
+    if shape == 'triangle':
+        t_on = np.where(np.logical_and(t_1 <= t, t < t_2))
+        for idx_t in range(len(t_on[0])):
+            f_high = f_2 - (f_2 - f_1) * (t[idx_t] - t_1) / (t_2 - t_1)
+            H[:, idx_t] = np.logical_and(f_1 <= f, f < f_high).astype(np.float64) * np.exp(- 2 * np.pi * eta * t[idx_t])
+        return H
+    elif shape == 'square':
+        t_on = np.where(np.logical_and(t_1 <= t, t < t_2))
+        for idx_t in range(len(t_on[0])):
+            H[:, idx_t] = np.logical_and(f_1 <= f, f < f_2).astype(np.float64) * np.exp(- 2 * np.pi * eta * t[idx_t])
+        return H
 
 
 def pad_and_smooth(signal, t, fs, attack, release, init_rest, final_rest):

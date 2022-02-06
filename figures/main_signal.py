@@ -19,12 +19,12 @@ release = 0.05  # in seconds
 init_rest = 1.  # in seconds
 final_rest = 1.  # in seconds
 
-t_fft = 0.1  # in seconds
-t_hop = 0.01  # in seconds
+L = 0.1  # in seconds
+H = 0.01  # in seconds
 omega_low = 100.  # in Hertz
 omega_high = 300.  # in Hertz
 tau_start = 0.  # in seconds
-tau_end = 2.  # in seconds
+tau_end = 4.  # in seconds
 eta = 1.  # in Hertz
 
 parameters = {
@@ -40,18 +40,18 @@ parameters = {
     'init_rest': init_rest,
     'final_rest': final_rest,
 
-    't_fft': 0.1,
-    't_hop': 0.01,
-    'omega_low': 100.,
-    'omega_high': 300.,
-    'tau_start': 0.,
-    'tau_end': 2.,
-    'eta': 1.
+    'L': L,
+    'H': H,
+    'omega_low': omega_low,
+    'omega_high': omega_high,
+    'tau_start': tau_start,
+    'tau_end': tau_end,
+    'eta': eta
 }
 
 # Harmonic
 t_har, signal_harmonic = generate_harmonic(T, fs, N, f_0, A_0, delta)
-t_inh, signal_inharmonic = generate_inharmonic(T, fs, t_fft, t_hop, omega_low, omega_high, tau_start, tau_end, eta)
+t_inh, signal_inharmonic = generate_inharmonic(T, fs, L, H, omega_low, omega_high, tau_start, tau_end, eta)
 
 assert len(t_har) == len(t_inh)
 
