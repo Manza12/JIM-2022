@@ -1,5 +1,5 @@
-import numpy as np
-from signal_generation import generate_harmonic, pad_and_smooth
+from plot import plot_signal
+from signal_generation import generate_harmonic, pad_and_smooth, generate_inharmonic
 import matplotlib.pyplot as plt
 import scipy.io.wavfile as wav
 from pathlib import Path
@@ -19,6 +19,14 @@ release = 0.05  # in seconds
 init_rest = 1.  # in seconds
 final_rest = 1.  # in seconds
 
+t_fft = 0.1  # in seconds
+t_hop = 0.01  # in seconds
+omega_low = 100.  # in Hertz
+omega_high = 300.  # in Hertz
+tau_start = 0.  # in seconds
+tau_end = 2.  # in seconds
+eta = 1.  # in Hertz
+
 parameters = {
     'T': T,
     'fs': fs,
@@ -31,21 +39,43 @@ parameters = {
     'release': release,
     'init_rest': init_rest,
     'final_rest': final_rest,
+
+    't_fft': 0.1,
+    't_hop': 0.01,
+    'omega_low': 100.,
+    'omega_high': 300.,
+    'tau_start': 0.,
+    'tau_end': 2.,
+    'eta': 1.
 }
 
 # Harmonic
-t, signal_harmonic = generate_harmonic(T, fs, N, f_0, A_0, delta)
-t, signal_harmonic = pad_and_smooth(signal_harmonic, t, fs, attack, release, init_rest, final_rest)
+t_har, signal_harmonic = generate_harmonic(T, fs, N, f_0, A_0, delta)
+t_inh, signal_inharmonic = generate_inharmonic(T, fs, t_fft, t_hop, omega_low, omega_high, tau_start, tau_end, eta)
+
+assert len(t_har) == len(t_inh)
+
+t_har, signal_harmonic = pad_and_smooth(signal_harmonic, t_har, fs, attack, release, init_rest, final_rest)
+t_inh, signal_inharmonic = pad_and_smooth(signal_inharmonic, t_inh, fs, attack, release, init_rest, final_rest)
+
+assert len(t_har) == len(t_inh)
+
+signal = signal_harmonic + signal_inharmonic
+t = t_har
 
 # Save
 folder = Path('..') / Path('output') / Path('synthesized')
 create_if_not_exists(folder)
 
 wav.write(folder / Path('signal_harmonic.wav'), fs, signal_harmonic)
+wav.write(folder / Path('signal_inharmonic.wav'), fs, signal_inharmonic)
+wav.write(folder / Path('signal.wav'), fs, signal)
 
 save_pickle(folder / Path('parameters.pickle'), parameters)
 
 # Plot
-plt.figure()
-plt.plot(t, signal_harmonic)
+plot_signal(signal_harmonic, t_har)
+plot_signal(signal_inharmonic, t_inh)
+plot_signal(signal, t)
+
 plt.show()
