@@ -205,3 +205,141 @@ def plot_harmonics(output):
         ax.set_ylim(y_lim)
 
     return fig
+
+
+def plot_time_frequency_2(a_0, a_1, t, f, v_min=0, v_max=1, c_map='Greys',
+                          fig_title=None, show=True, block=True, numpy=True,
+                          full_screen=False, fig_size=(640, 480),
+                          freq_type='int', resolution='cs',
+                          freq_label='Frequency (Hz)', time_label='Time (s)',
+                          plot_units=False, freq_names=None, dpi=120,
+                          backend=matplotlib.get_backend(), interpolation='antialiased',
+                          color_bar=True):
+
+    fig, ax = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True,
+                           figsize=(fig_size[0]/dpi, fig_size[1]/dpi), dpi=dpi)
+    if fig_title:
+        fig.suptitle(fig_title)
+
+    if numpy:
+        a_0_plot = a_0
+        a_1_plot = a_1
+    else:
+        a_0_plot = a_0.cpu().numpy()
+        a_1_plot = a_1.cpu().numpy()
+
+    im_0 = ax[0].imshow(a_0_plot, cmap=c_map, aspect='auto', vmin=v_min, vmax=v_max,
+                        origin='lower', interpolation=interpolation)
+    im_1 = ax[1].imshow(a_1_plot, cmap=c_map, aspect='auto', vmin=v_min, vmax=v_max,
+                        origin='lower', interpolation=interpolation)
+
+    if color_bar:
+        c_bar_0 = fig.colorbar(im_0, ax=ax[0])
+        c_bar_0.ax.set_title('Puissance (dB)', fontsize=8)
+
+        c_bar_1 = fig.colorbar(im_1, ax=ax[1])
+        c_bar_1.ax.set_title('Puissance (dB)', fontsize=8)
+
+    plt.tight_layout()
+
+    # Freq axis
+    for i in range(2):
+        ax[i].yaxis.set_major_formatter(
+            tick.FuncFormatter(lambda x, pos:
+                               format_freq(x, pos, f, freq_type, freq_names,
+                                           plot_units=plot_units)))
+
+    # Time axis
+    for i in range(2):
+        ax[i].xaxis.set_major_formatter(
+            tick.FuncFormatter(lambda x, pos: format_time(x, pos, t, plot_units=plot_units, resolution=resolution)))
+
+    # Labels
+    for i in range(2):
+        ax[i].set_xlabel(time_label)
+        ax[i].set_ylabel(freq_label)
+
+    if full_screen:
+        manager = plt.get_current_fig_manager()
+        if backend == 'WXAgg':
+            manager.frame.Maximize(True)
+        elif backend == 'TkAgg':
+            manager.resize(*manager.window.maxsize())
+        elif backend == 'Qt5Agg':
+            manager.window.showMaximized()
+        else:
+            raise Exception("Backend not supported.")
+
+    if show:
+        plt.show(block=block)
+
+    return fig
+
+
+def plot_time_frequency_top_hat(a_0, a_1, t, f, v_min=0, v_max=1, c_map='Greys',
+                                fig_title=None, show=True, block=True, numpy=True,
+                                full_screen=False, fig_size=(640, 480),
+                                freq_type='int', resolution='cs',
+                                freq_label='Frequency (Hz)', time_label='Time (s)',
+                                plot_units=False, freq_names=None, dpi=120,
+                                backend=matplotlib.get_backend(), interpolation='antialiased',
+                                color_bar=True):
+
+    fig, ax = plt.subplots(nrows=1, ncols=2, sharex=True, sharey=True,
+                           figsize=(fig_size[0]/dpi, fig_size[1]/dpi), dpi=dpi)
+    if fig_title:
+        fig.suptitle(fig_title)
+
+    if numpy:
+        a_0_plot = a_0
+        a_1_plot = a_1
+    else:
+        a_0_plot = a_0.cpu().numpy()
+        a_1_plot = a_1.cpu().numpy()
+
+    im_0 = ax[0].imshow(a_0_plot, cmap=c_map, aspect='auto', vmin=0, vmax=20,
+                        origin='lower', interpolation=interpolation)
+    im_1 = ax[1].imshow(a_1_plot, cmap=c_map, aspect='auto', vmin=v_min, vmax=v_max,
+                        origin='lower', interpolation=interpolation)
+
+    if color_bar:
+        c_bar_0 = fig.colorbar(im_0, ax=ax[0])
+        c_bar_0.ax.set_title('Puissance (dB)', fontsize=8)
+
+        c_bar_1 = fig.colorbar(im_1, ax=ax[1])
+        c_bar_1.ax.set_title('Puissance (dB)', fontsize=8)
+
+    plt.tight_layout()
+
+    # Freq axis
+    for i in range(2):
+        ax[i].yaxis.set_major_formatter(
+            tick.FuncFormatter(lambda x, pos:
+                               format_freq(x, pos, f, freq_type, freq_names,
+                                           plot_units=plot_units)))
+
+    # Time axis
+    for i in range(2):
+        ax[i].xaxis.set_major_formatter(
+            tick.FuncFormatter(lambda x, pos: format_time(x, pos, t, plot_units=plot_units, resolution=resolution)))
+
+    # Labels
+    for i in range(2):
+        ax[i].set_xlabel(time_label)
+        ax[i].set_ylabel(freq_label)
+
+    if full_screen:
+        manager = plt.get_current_fig_manager()
+        if backend == 'WXAgg':
+            manager.frame.Maximize(True)
+        elif backend == 'TkAgg':
+            manager.resize(*manager.window.maxsize())
+        elif backend == 'Qt5Agg':
+            manager.window.showMaximized()
+        else:
+            raise Exception("Backend not supported.")
+
+    if show:
+        plt.show(block=block)
+
+    return fig
