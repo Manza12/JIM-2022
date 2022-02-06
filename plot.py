@@ -23,7 +23,8 @@ def plot_time_frequency(a, t, f, v_min=0, v_max=1, c_map='Greys',
                         freq_type='int', resolution='cs',
                         freq_label='Frequency (Hz)', time_label='Time (s)',
                         plot_units=False, freq_names=None, dpi=120,
-                        backend=matplotlib.get_backend(), interpolation='antialiased'):
+                        backend=matplotlib.get_backend(), interpolation='antialiased',
+                        color_bar=True):
     fig = plt.figure(figsize=(fig_size[0]/dpi, fig_size[1]/dpi), dpi=dpi)
 
     if fig_title:
@@ -36,8 +37,14 @@ def plot_time_frequency(a, t, f, v_min=0, v_max=1, c_map='Greys',
     else:
         a_plot = a.cpu().numpy()
 
-    ax.imshow(a_plot, cmap=c_map, aspect='auto', vmin=v_min, vmax=v_max,
-              origin='lower', interpolation=interpolation)
+    im = ax.imshow(a_plot, cmap=c_map, aspect='auto', vmin=v_min, vmax=v_max,
+                   origin='lower', interpolation=interpolation)
+
+    if color_bar:
+        c_bar = fig.colorbar(im, ax=ax)
+        c_bar.ax.set_title('Puissance (dB)', fontsize=8)
+
+    plt.tight_layout()
 
     # Freq axis
     ax.yaxis.set_major_formatter(
@@ -97,6 +104,10 @@ def format_time(x, pos, t, plot_units=False, resolution='cs'):
     if pos:
         pass
     n = int(round(x))
+    if resolution == 's':
+        if 0 <= n < t.size:
+            return str(round(t[n], 3))
+
     if 0 <= n < t.size:
         if plot_units:
             return str(round(t[n], 3)) + " s"
