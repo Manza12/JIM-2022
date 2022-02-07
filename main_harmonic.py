@@ -6,7 +6,7 @@ from audio import audio_main
 from morphology import morphology_top_hat, morphology_top_hat_simplified
 from plot import plot_signal, plot_time_frequency, plot_slider, update_slider, plot_harmonics
 from spectrogram import spectrogram_main
-from synthesis import recover_vectors, synthesize_from_image
+from synthesis import recover_vectors, synthesize_from_arrays
 import pickle
 import numpy as np
 import scipy.io.wavfile as wav
@@ -93,7 +93,7 @@ spectrograms_for_synth = np.copy(spectrograms_db_output_np)
 output_arrays = recover_vectors(spectrograms_for_synth, time_vector, frequency_vector, frequency_steps_erosion,
                                 time_resolution, threshold_amplitude, threshold_duration)
 
-synthesized_signal, time_array = synthesize_from_image(output_arrays, time_vector, fs)
+synthesized_signal, time_array = synthesize_from_arrays(output_arrays, time_vector[-1], fs)
 
 # Spectrogram output
 synthesized_signal_tensor = torch.tensor(synthesized_signal, device=device, dtype=torch.float32)

@@ -136,8 +136,7 @@ def phase_vocoder(frequencies, amplitudes, fs):
     return signal
 
 
-def synthesize_from_image(resulting_arrays, time_vector, fs):
-    duration = time_vector[-1]
+def synthesize_from_arrays(resulting_arrays, duration, fs):
     time_array = np.arange(int(fs * duration)) / fs
     synthesized_signal = np.zeros_like(time_array)
 

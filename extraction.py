@@ -1,6 +1,6 @@
 import os
 from morphology import morphology_top_hat, morphology_top_hat_simplified
-from synthesis import recover_vectors_no_tqdm, synthesize_from_image
+from synthesis import recover_vectors_no_tqdm, synthesize_from_arrays
 import pickle
 import os.path as path
 import torch
@@ -91,7 +91,7 @@ def extract_harmonic(name):
                                             frequency_steps_erosion, time_resolution, threshold_amplitude,
                                             threshold_duration)
 
-    synthesized_signal, time_array = synthesize_from_image(output_arrays, time_vector, fs)
+    synthesized_signal, time_array = synthesize_from_arrays(output_arrays, time_vector, fs)
 
     # Spectrogram output
     synthesized_signal_tensor = torch.tensor(synthesized_signal, device=device, dtype=torch.float32)

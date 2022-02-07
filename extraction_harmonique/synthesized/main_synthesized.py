@@ -7,8 +7,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 import scipy.ndimage.morphology as morpho
-from synthesis import recover_vectors_bis
+from synthesis import recover_vectors_bis, synthesize_from_arrays
 from utils import get_str_el, load_pickle
+
+plot = False
 
 # Input
 name = 'signal.wav'
@@ -103,46 +105,55 @@ fig.axes[0].set_ylim([-100, 0.])
 plt.tight_layout()
 plt.savefig('figure_amplitudes.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
+# Synthesis
+duration = 6.  # in seconds
+synthesized_signal, time_array = synthesize_from_arrays(output_arrays, duration, fs)
+
+# Write audio
+audio_path = Path('harmonic.wav')
+wav.write(audio_path, fs, synthesized_signal.astype(np.float32))
+
 # Plot
-# Input
-fig = plot_time_frequency(spectrogram_db, tau, omega, v_min=-120, v_max=0, resolution='s',
-                          time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
-fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
-fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 7500. * (t_fft * padding_factor)])
-plt.tight_layout()
-plt.savefig('figure_input.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+if plot:
+    # Input
+    fig = plot_time_frequency(spectrogram_db, tau, omega, v_min=-120, v_max=0, resolution='s',
+                              time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
+    fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 7500. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    plt.savefig('figure_input.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
-# Closing
-fig = plot_time_frequency_2(spectrogram_db, closing, tau, omega, v_min=-120, v_max=0, resolution='s',
-                            time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
-fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
-fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
-plt.tight_layout()
-plt.savefig('figure_closing.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+    # Closing
+    fig = plot_time_frequency_2(spectrogram_db, closing, tau, omega, v_min=-120, v_max=0, resolution='s',
+                                time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
+    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    plt.savefig('figure_closing.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
-# Erosion
-fig = plot_time_frequency_2(closing, erosion, tau, omega, v_min=-120, v_max=0, resolution='s',
-                            time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
-fig.axes[0].set_xlim([2.2 / time_resolution, 2.4 / time_resolution])
-fig.axes[0].set_ylim([170. * (t_fft * padding_factor), 270. * (t_fft * padding_factor)])
-plt.tight_layout()
-plt.savefig('figure_erosion.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+    # Erosion
+    fig = plot_time_frequency_2(closing, erosion, tau, omega, v_min=-120, v_max=0, resolution='s',
+                                time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
+    fig.axes[0].set_xlim([2.2 / time_resolution, 2.4 / time_resolution])
+    fig.axes[0].set_ylim([170. * (t_fft * padding_factor), 270. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    plt.savefig('figure_erosion.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
-# Top-hat
-fig = plot_time_frequency(top_hat, tau, omega, v_min=0, v_max=20, resolution='s',
-                          time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
-fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
-fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 4000. * (t_fft * padding_factor)])
-plt.tight_layout()
-plt.savefig('figure_top-hat.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+    # Top-hat
+    fig = plot_time_frequency(top_hat, tau, omega, v_min=0, v_max=20, resolution='s',
+                              time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
+    fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 4000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    plt.savefig('figure_top-hat.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
-# Opening
-fig = plot_time_frequency(opening, tau, omega, v_min=-120, v_max=0, resolution='s',
-                          time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
-fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
-fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 4000. * (t_fft * padding_factor)])
-plt.tight_layout()
-plt.savefig('figure_opening.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+    # Opening
+    fig = plot_time_frequency(opening, tau, omega, v_min=-120, v_max=0, resolution='s',
+                              time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
+    fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 4000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    plt.savefig('figure_opening.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
-# Show
-plt.show()
+    # Show
+    plt.show()
