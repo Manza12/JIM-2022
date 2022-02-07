@@ -12,7 +12,7 @@ fs = 44100  # in Hertz
 N = 16
 f_0 = 2*110.  # in Hertz
 A_0 = 0.1
-delta = 1e-3
+delta = 5e-4
 
 attack = 0.02  # in seconds
 release = 0.05  # in seconds

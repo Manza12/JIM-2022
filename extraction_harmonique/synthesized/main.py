@@ -9,9 +9,8 @@ import scipy.ndimage.morphology as morpho
 from utils import get_str_el
 
 # Input
-
 name = 'signal.wav'
-folder = Path('..') / Path('output') / Path('synthesized')
+folder = Path('..') / Path('..') / Path('output') / Path('synthesized')
 file_path = Path(folder) / name
 
 fs, signal = wav.read(file_path)
@@ -80,6 +79,14 @@ opening = morpho.grey_opening(closing, structure=str_el_ope)
 print('Time to morphology: %.3f' % (time() - start))
 
 # Plot
+# Input
+fig = plot_time_frequency(spectrogram_db, tau, omega, v_min=-120, v_max=0, resolution='s',
+                          time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
+fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
+fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 7500. * (t_fft * padding_factor)])
+plt.tight_layout()
+plt.savefig('figure_input.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
 # Closing
 fig = plot_time_frequency_2(spectrogram_db, closing, tau, omega, v_min=-120, v_max=0, resolution='s',
                             time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
