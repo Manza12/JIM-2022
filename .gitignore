@@ -1,3 +1,4 @@
-old
+old/samples
+old/.gitattributes*
 .idea
 __pycache__
