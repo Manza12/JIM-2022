@@ -1,12 +1,14 @@
 from pathlib import Path
 import scipy.io.wavfile as wav
 import scipy.signal as sig
-from plot import plot_time_frequency, plot_time_frequency_2
+from generation_signal.signal_generation import generate_harmonic_data
+from plot import plot_time_frequency, plot_time_frequency_2, plot_harmonics_ground_truth
 import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 import scipy.ndimage.morphology as morpho
-from utils import get_str_el
+from synthesis import recover_vectors_bis
+from utils import get_str_el, load_pickle
 
 # Input
 name = 'signal.wav'
@@ -77,6 +79,29 @@ str_el_ope = np.zeros((opening_width, 1))
 opening = morpho.grey_opening(closing, structure=str_el_ope)
 
 print('Time to morphology: %.3f' % (time() - start))
+
+# Recover parameters
+threshold_amplitude = -120
+threshold_duration = 0.05
+neighbourhood_width = top_hat_width // 2 + 1
+
+spectrograms_for_synth = np.copy(output)
+output_arrays = recover_vectors_bis(spectrograms_for_synth, tau, omega, time_resolution, neighbourhood_width,
+                                    threshold_amplitude, threshold_duration)
+
+# Generate ground truth
+folder = Path('..') / Path('..') / Path('output') / Path('synthesized')
+parameters_path = Path(folder) / 'parameters.pickle'
+parameters = load_pickle(parameters_path)
+start = time()
+ground_truth = generate_harmonic_data(**parameters)
+print('Time to generate ground truth: %.3f' % (time() - start))
+
+fig = plot_harmonics_ground_truth(output_arrays, ground_truth, 'all', step=12)
+fig.axes[0].set_xlim([0.8, 5.2])
+fig.axes[0].set_ylim([-100, 0.])
+plt.tight_layout()
+plt.savefig('figure_amplitudes.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
 # Plot
 # Input

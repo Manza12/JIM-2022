@@ -343,3 +343,26 @@ def plot_time_frequency_top_hat(a_0, a_1, t, f, v_min=0, v_max=1, c_map='Greys',
         plt.show(block=block)
 
     return fig
+
+
+def plot_harmonics_ground_truth(output_arrays, ground_truth, indexes, step, scale='log', eps=1e-20):
+    fig = plt.figure(figsize=(6., 3.))
+
+    if indexes == 'all':
+        indexes = np.arange(max(len(output_arrays), len(ground_truth)))
+
+    for idx in indexes:
+        if scale == 'log':
+            amplitudes_ground = 20 * np.log10(ground_truth[idx][2, :] + eps)
+            amplitudes_output = 20 * np.log10(output_arrays[idx][2, :] + eps)
+        else:
+            amplitudes_ground = ground_truth[idx][2, :]
+            amplitudes_output = output_arrays[idx][2, :]
+
+        plt.plot(ground_truth[idx][1, :], amplitudes_ground)
+        plt.scatter(output_arrays[idx][1, ::step], amplitudes_output[::step], marker='x')
+
+    plt.xlabel('Temps (s)')
+    plt.ylabel('Amplitude (dB)')
+
+    return fig

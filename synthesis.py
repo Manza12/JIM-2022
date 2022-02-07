@@ -46,6 +46,48 @@ def recover_vectors(spectrograms, time_vector, stft_frequencies, frequency_steps
     return resulting_arrays
 
 
+def recover_vectors_bis(spectrogram, time_vector, stft_frequencies, time_resolution, neighbourhood_width,
+                        threshold_amplitude, threshold_duration):
+    threshold_duration_bins = int(threshold_duration / time_resolution)
+
+    resulting_arrays = list()
+
+    for k in tqdm(range(spectrogram.shape[0] - neighbourhood_width)):
+        frequencies = list()
+        timestamps = list()
+        amplitudes = list()
+
+        if np.any(spectrogram[k, :] > threshold_amplitude):
+            on = False
+            for n in range(spectrogram.shape[1]):
+                neighborhood = spectrogram[k: k + neighbourhood_width, n]
+                amp_db = np.max(neighborhood)
+                idx = np.argmax(neighborhood)
+
+                if amp_db > threshold_amplitude:
+                    on = True
+                    frequencies += [stft_frequencies[k + idx]]
+                    timestamps += [time_vector[n]]
+                    amplitudes += [2 * 10 ** (amp_db / 20)]
+
+                    spectrogram[k: k + 3, n] = threshold_amplitude
+                else:
+                    if on:
+                        if len(frequencies) > threshold_duration_bins:
+                            resulting_array = np.array((frequencies, timestamps, amplitudes))
+                            resulting_arrays.append(resulting_array)
+                        frequencies = list()
+                        timestamps = list()
+                        amplitudes = list()
+                    on = False
+            if on:
+                if len(frequencies) > threshold_duration_bins:
+                    resulting_array = np.array((frequencies, timestamps, amplitudes))
+                    resulting_arrays.append(resulting_array)
+
+    return resulting_arrays
+
+
 def recover_vectors_no_tqdm(spectrograms, time_vector, stft_frequencies, frequency_steps_erosion, time_resolution,
                             threshold_amplitude, threshold_duration):
     threshold_duration_bins = int(threshold_duration / time_resolution)

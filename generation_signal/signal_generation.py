@@ -2,6 +2,31 @@ import numpy as np
 import scipy.signal as sig
 
 
+def generate_harmonic_data(T, fs, N, f_0, A_0, delta, **kwargs):
+
+    resulting_arrays = list()
+
+    # Time vector
+    t = np.arange(0, T, 1 / fs)
+
+    f_n = f_0 * np.arange(1, N + 1, 1)
+    omega_n = np.expand_dims(f_n, 1) * np.expand_dims(np.ones_like(t), 0)
+
+    A_n = A_0 / np.arange(1, N + 1, 1) ** 2
+    delta_n = delta * f_n
+    a_n = np.expand_dims(A_n, 1) * np.exp(- 2 * np.pi * np.expand_dims(delta_n, 1) * np.expand_dims(t, 0))
+
+    for n in range(N):
+        frequencies = omega_n[n, :]
+        amplitudes = smooth(a_n[n, :], t, fs, kwargs['attack'], kwargs['release'])
+        timestamps = kwargs['init_rest'] + t
+
+        resulting_array = np.array((frequencies, timestamps, amplitudes))
+        resulting_arrays.append(resulting_array)
+
+    return resulting_arrays
+
+
 def generate_harmonic(T, fs, N, f_0, A_0, delta):
     # Time vector
     t = np.arange(0, T, 1 / fs)
@@ -71,3 +96,10 @@ def pad_and_smooth(signal, t, fs, attack, release, init_rest, final_rest):
     new_signal = np.concatenate((np.zeros(int(init_rest * fs)), signal, np.zeros(int(final_rest * fs))))
 
     return t.astype(np.float32), new_signal.astype(np.float32)
+
+
+def smooth(signal, t, fs, attack, release):
+    signal[0: int(attack * fs)] *= np.arange(0, attack, 1 / fs) / attack
+    signal[-int(release * fs):] *= np.flip(np.arange(0, release, 1 / fs) / release)
+
+    return signal

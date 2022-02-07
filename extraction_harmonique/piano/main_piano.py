@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 import scipy.ndimage.morphology as morpho
+from synthesis import recover_vectors_bis
 from utils import get_str_el
 
 # Input
@@ -78,12 +79,20 @@ opening = morpho.grey_opening(closing, structure=str_el_ope)
 
 print('Time to morphology: %.3f' % (time() - start))
 
+# Recover parameters
+threshold_amplitude = -120
+threshold_duration = 0.05
+
+spectrograms_for_synth = np.copy(output)
+output_arrays = recover_vectors_bis(spectrograms_for_synth, tau, omega, time_resolution,
+                                    threshold_amplitude, threshold_duration)
+
 # Plot
 # Input
 fig = plot_time_frequency(spectrogram_db, tau, omega, v_min=-120, v_max=0, resolution='s',
                           time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
 fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
-fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 7500. * (t_fft * padding_factor)])
+fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 6000. * (t_fft * padding_factor)])
 plt.tight_layout()
 plt.savefig('figure_input_piano.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
