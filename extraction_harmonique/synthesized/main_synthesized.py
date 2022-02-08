@@ -63,6 +63,7 @@ erosion = morpho.grey_erosion(closing, structure=str_el_ero)
 
 # Top-hat
 top_hat_width = 5  # in samples
+top_hat_freq_width = top_hat_width * frequency_precision  # in Hertz
 threshold = 10.  # in dB
 
 str_el_clo = np.zeros((top_hat_width, 1))
