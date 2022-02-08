@@ -6,17 +6,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 import scipy.ndimage.morphology as morpho
-from synthesis import recover_vectors_bis, synthesize_from_arrays
-from utils import get_str_el
+from synthesis import recover_vectors_bis, synthesize_from_arrays, synthesize_noise_mask
+from utils import get_str_el, save_pickle
 
 plot = True
 
 # Input
-name = 'La2.wav'
 folder = Path('..') / Path('..') / Path('input')
-file_path = Path(folder) / name
+signal_path = Path(folder) / 'La2.wav'
 
-fs, signal = wav.read(file_path)
+fs, signal = wav.read(signal_path)
 
 # STFT
 ts = 1 / fs  # in seconds
@@ -30,10 +29,17 @@ win_length = int(t_fft * fs)
 hop_length = int(fs * time_resolution)
 window = 'hann'
 eps = 1e-12
+stft_parameters = {
+    'fs': fs,
+    'window': window,
+    'nperseg': win_length,
+    'noverlap': win_length - hop_length,
+    'nfft': n_fft,
+    'boundary': 'zeros',
+}
 
 start = time()
-omega, tau, stft = sig.stft(signal, fs=fs, window=window, nperseg=win_length, noverlap=win_length - hop_length,
-                            nfft=n_fft, detrend=False, return_onesided=True, boundary='zeros', padded=True, axis=-1)
+omega, tau, stft = sig.stft(signal, **stft_parameters)
 print('Time to STFT: %.3f' % (time() - start))
 
 spectrogram = np.abs(stft)**2
@@ -63,7 +69,7 @@ erosion = morpho.grey_erosion(closing, structure=str_el_ero)
 # Top-hat
 top_hat_width = 5  # in samples
 top_hat_freq_width = top_hat_width * frequency_precision  # in Hertz
-threshold = 10.  # in dB
+threshold = 5.  # in dB
 
 str_el_clo = np.zeros((top_hat_width, 1))
 
@@ -91,13 +97,29 @@ spectrograms_for_synth = np.copy(output)
 output_arrays = recover_vectors_bis(spectrograms_for_synth, tau, omega, time_resolution, neighbourhood_width,
                                     threshold_amplitude, threshold_duration)
 
+# Write synthesis parameters
+synthesis_parameters = {'harmonic': output_arrays, 'non-harmonic': opening}
+synthesis_parameters_path = Path('synthesis_parameters.pickle')
+save_pickle(synthesis_parameters_path, synthesis_parameters)
+
 # Synthesis
 duration = 6.  # in seconds
-synthesized_signal, time_array = synthesize_from_arrays(output_arrays, duration, fs)
+noise_normalization = 'max'
+synthesized_harmonic, time_harmonic = synthesize_from_arrays(output_arrays, duration, fs)
+synthesized_non_harmonic, time_noise, white_noise_stft, filtered_noise_stft = synthesize_noise_mask(opening, duration,
+                                                                                                    noise_normalization,
+                                                                                                    **stft_parameters)
+white_noise_db = 10 * np.log10(np.abs(white_noise_stft)**2 + eps)
+filtered_noise_db = 10 * np.log10(np.abs(filtered_noise_stft)**2 + eps)
 
 # Write audio
-audio_path = Path('harmonic.wav')
-wav.write(audio_path, fs, synthesized_signal.astype(np.float32))
+harmonic_path = Path('harmonic.wav')
+non_harmonic_path = Path('non-harmonic.wav')
+resynthesized_path = Path('resynthesized.wav')
+
+wav.write(harmonic_path, fs, synthesized_harmonic.astype(np.float32))
+wav.write(non_harmonic_path, fs, synthesized_non_harmonic.astype(np.float32))
+wav.write(resynthesized_path, fs, (synthesized_harmonic + synthesized_non_harmonic).astype(np.float32))
 
 # Plot
 if plot:
@@ -105,7 +127,7 @@ if plot:
     fig = plot_time_frequency(spectrogram_db, tau, omega, v_min=-120, v_max=0, resolution='s',
                               time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
     fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
-    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 7500. * (t_fft * padding_factor)])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
     plt.savefig('figure_input_piano.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
@@ -129,7 +151,7 @@ if plot:
     fig = plot_time_frequency(top_hat, tau, omega, v_min=0, v_max=20, resolution='s',
                               time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
     fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
-    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 4000. * (t_fft * padding_factor)])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
     plt.savefig('figure_top-hat_piano.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
@@ -137,9 +159,25 @@ if plot:
     fig = plot_time_frequency(opening, tau, omega, v_min=-120, v_max=0, resolution='s',
                               time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
     fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
-    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 4000. * (t_fft * padding_factor)])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
     plt.savefig('figure_opening_piano.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # White noise
+    fig = plot_time_frequency(white_noise_db, tau, omega, v_min=-120, v_max=0, resolution='s',
+                              time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
+    fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    plt.savefig('figure_white_noise.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Filtered noise
+    fig = plot_time_frequency(filtered_noise_db, tau, omega, v_min=-120, v_max=0, resolution='s',
+                              time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=(600, 300), show=False)
+    fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    plt.savefig('figure_filtered_noise.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
     # Show
     plt.show()

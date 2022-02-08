@@ -178,6 +178,32 @@ def synthesize_noise_from_image(signal_size, device, stft_layer, eps, spectrogra
     return white_noise_db, filtered_noise_db, filtered_noise_numpy
 
 
+def synthesize_noise_mask(mask, duration, normalization='max', **stft_parameters):
+    N = int(duration * stft_parameters['fs'])
+
+    # Create noise
+    white_noise = np.random.rand(N) * 2 - 1
+    omega, tau, white_noise_stft = sig.stft(white_noise, **stft_parameters)
+
+    # Normalize noise
+    if normalization == 'mean':
+        log_mean = np.mean(10 * np.log10(np.abs(white_noise_stft) ** 2))
+        white_noise_normalized_stft = white_noise_stft / 10 ** (log_mean / 20)
+    elif normalization == 'max':
+        log_max = np.max(10 * np.log10(np.abs(white_noise_stft) ** 2))
+        white_noise_normalized_stft = white_noise_stft / 10**(log_max / 20)
+    else:
+        white_noise_normalized_stft = white_noise_stft
+
+    # Filter spectrogram
+    filtered_noise_stft = white_noise_normalized_stft * 10 ** (mask / 20)
+
+    # Synthesize
+    time_array, filtered_noise = sig.istft(filtered_noise_stft, **stft_parameters)
+
+    return filtered_noise, time_array, white_noise_normalized_stft, filtered_noise_stft
+
+
 def interpolate(time_array, timestamps, y, interpolation_type='linear'):
     if interpolation_type == 'linear':
         return np.interp(time_array, timestamps, y)
