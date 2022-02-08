@@ -297,9 +297,9 @@ def plot_time_frequency_top_hat(a_0, a_1, t, f, v_min=0, v_max=1, c_map='Greys',
         a_0_plot = a_0.cpu().numpy()
         a_1_plot = a_1.cpu().numpy()
 
-    im_0 = ax[0].imshow(a_0_plot, cmap=c_map, aspect='auto', vmin=0, vmax=20,
+    im_0 = ax[0].imshow(a_0_plot, cmap=c_map, aspect='auto', vmin=v_min, vmax=v_max,
                         origin='lower', interpolation=interpolation)
-    im_1 = ax[1].imshow(a_1_plot, cmap=c_map, aspect='auto', vmin=v_min, vmax=v_max,
+    im_1 = ax[1].imshow(a_1_plot, cmap=c_map, aspect='auto', vmin=0, vmax=20,
                         origin='lower', interpolation=interpolation)
 
     if color_bar:

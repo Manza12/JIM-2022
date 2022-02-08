@@ -70,7 +70,7 @@ def recover_vectors_bis(spectrogram, time_vector, stft_frequencies, time_resolut
                     timestamps += [time_vector[n]]
                     amplitudes += [2 * 10 ** (amp_db / 20)]
 
-                    spectrogram[k: k + 3, n] = threshold_amplitude
+                    spectrogram[k: k + neighbourhood_width, n] = threshold_amplitude
                 else:
                     if on:
                         if len(frequencies) > threshold_duration_bins:
