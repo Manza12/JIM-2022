@@ -95,7 +95,18 @@ def pad_and_smooth(signal, t, fs, attack, release, init_rest, final_rest):
     signal[-int(release * fs):] *= np.flip(np.arange(0, release, 1 / fs) / release)
     new_signal = np.concatenate((np.zeros(int(init_rest * fs)), signal, np.zeros(int(final_rest * fs))))
 
-    return t.astype(np.float32), new_signal.astype(np.float32)
+    return new_signal.astype(np.float32)
+
+
+def pad_and_cut(signal, duration, fs, init_rest, final_rest, fade_out):
+    N = int(fs * duration)
+    if signal.dtype.type == np.int16:
+        signal = signal / np.iinfo(signal.dtype).max
+    signal = signal[0:N]
+    signal[-int(fade_out * fs):] *= np.flip(np.arange(0, fade_out, 1 / fs) / fade_out)
+    new_signal = np.concatenate((np.zeros(int(init_rest * fs)), signal, np.zeros(int(final_rest * fs))))
+
+    return new_signal.astype(np.float32)
 
 
 def smooth(signal, t, fs, attack, release):

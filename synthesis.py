@@ -52,7 +52,7 @@ def recover_vectors_bis(spectrogram, time_vector, stft_frequencies, time_resolut
 
     resulting_arrays = list()
 
-    for k in tqdm(range(spectrogram.shape[0] - neighbourhood_width)):
+    for k in range(spectrogram.shape[0] - neighbourhood_width):
         frequencies = list()
         timestamps = list()
         amplitudes = list()
