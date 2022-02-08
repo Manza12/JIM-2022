@@ -98,9 +98,11 @@ threshold_amplitude = -120
 threshold_duration = 0.05
 neighbourhood_width = top_hat_width // 2 + 1
 
+start = time()
 spectrograms_for_synth = np.copy(output)
 output_arrays = recover_vectors_bis(spectrograms_for_synth, tau, omega, time_resolution, neighbourhood_width,
                                     threshold_amplitude, threshold_duration)
+print('Time to recover vectors: %.3f' % (time() - start))
 
 # Write synthesis parameters
 synthesis_parameters = {'harmonic': output_arrays, 'non-harmonic': opening}
@@ -108,6 +110,7 @@ synthesis_parameters_path = Path('synthesis_parameters.pickle')
 save_pickle(synthesis_parameters_path, synthesis_parameters)
 
 # Synthesis
+start = time()
 duration = 6.  # in seconds
 noise_normalization = 'max'
 synthesized_harmonic, time_harmonic = synthesize_from_arrays(output_arrays, duration, fs)
@@ -116,12 +119,15 @@ synthesized_non_harmonic, time_noise, white_noise_stft, filtered_noise_stft = sy
                                                                                                     **stft_parameters)
 white_noise_db = 10 * np.log10(np.abs(white_noise_stft)**2 + eps)
 filtered_noise_db = 10 * np.log10(np.abs(filtered_noise_stft)**2 + eps)
+print('Time to synthesize: %.3f' % (time() - start))
 
 # Write audio
+original_path = Path('original.wav')
 harmonic_path = Path('harmonic.wav')
 non_harmonic_path = Path('non-harmonic.wav')
 resynthesized_path = Path('resynthesized.wav')
 
+wav.write(original_path, fs, signal.astype(np.float32))
 wav.write(harmonic_path, fs, synthesized_harmonic.astype(np.float32))
 wav.write(non_harmonic_path, fs, synthesized_non_harmonic.astype(np.float32))
 wav.write(resynthesized_path, fs, (synthesized_harmonic + synthesized_non_harmonic).astype(np.float32))
