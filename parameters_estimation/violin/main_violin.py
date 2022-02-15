@@ -10,7 +10,7 @@ import scipy.ndimage.morphology as morpho
 from synthesis import recover_vectors_bis, synthesize_from_arrays, synthesize_noise_mask
 from utils import get_str_el, save_pickle
 
-plot = False
+plot = True
 
 # Input
 signal_path = Path('violin.wav')

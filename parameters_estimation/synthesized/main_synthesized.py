@@ -10,7 +10,7 @@ import scipy.ndimage.morphology as morpho
 from synthesis import recover_vectors_bis, synthesize_from_arrays, synthesize_noise_mask
 from utils import get_str_el, load_pickle, save_pickle
 
-plot = False
+plot = True
 
 # Input
 folder = Path('..') / Path('..') / Path('output') / Path('synthesized')
@@ -205,6 +205,15 @@ if plot:
     fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 1000. * (t_fft * padding_factor)])
     plt.tight_layout()
     plt.savefig('figure_noise.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Noise comparison
+    fig = plot_time_frequency_2(spectrogram_noise_db, filtered_noise_db, tau, omega, v_min=-120, v_max=0,
+                                resolution='s', time_label='Temps (s)', freq_label='Fréquence (Hz)',
+                                fig_size=(600, 300), show=False)
+    fig.axes[0].set_xlim([0.8 / time_resolution, 2.4 / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 400. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    plt.savefig('figure_noise_comparison.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
     # Show
     plt.show()
