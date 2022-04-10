@@ -1,11 +1,13 @@
-from pathlib import Path
+import sys
+from pathlib import Path; sys.path.insert(0, str(Path('..') / Path('..') / Path('..')))
 import scipy.io.wavfile as wav
 import scipy.signal as sig
-from instruments.synthetic.generation_signal.signal_generation import pad_and_cut
+from utils import pad_and_cut
 import numpy as np
 import matplotlib.pyplot as plt
 from time import time
 import scipy.ndimage.morphology as morpho
+from plot import plot_figures
 from synthesis import synthesize_from_arrays, synthesize_noise_mask, path_following
 from utils import save_pickle
 from skeleton import skeleton

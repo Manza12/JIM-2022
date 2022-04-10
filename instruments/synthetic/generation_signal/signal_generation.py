@@ -18,7 +18,7 @@ def generate_harmonic_data(T, fs, N, f_0, A_0, delta, **kwargs):
 
     for n in range(N):
         frequencies = omega_n[n, :]
-        amplitudes = smooth(a_n[n, :], t, fs, kwargs['attack'], kwargs['release'])
+        amplitudes = smooth(a_n[n, :], fs, kwargs['attack'], kwargs['release'])
         timestamps = kwargs['init_rest'] + t
 
         resulting_array = np.array((frequencies, timestamps, amplitudes))
@@ -98,18 +98,7 @@ def pad_and_smooth(signal, t, fs, attack, release, init_rest, final_rest):
     return t, new_signal.astype(np.float32)
 
 
-def pad_and_cut(signal, duration, fs, init_rest, final_rest, fade_out):
-    N = int(fs * duration)
-    if signal.dtype.type == np.int16:
-        signal = signal / np.iinfo(signal.dtype).max
-    signal = signal[0:N]
-    signal[-int(fade_out * fs):] *= np.flip(np.arange(0, fade_out, 1 / fs) / fade_out)
-    new_signal = np.concatenate((np.zeros(int(init_rest * fs)), signal, np.zeros(int(final_rest * fs))))
-
-    return new_signal.astype(np.float32)
-
-
-def smooth(signal, t, fs, attack, release):
+def smooth(signal, fs, attack, release):
     signal[0: int(attack * fs)] *= np.arange(0, attack, 1 / fs) / attack
     signal[-int(release * fs):] *= np.flip(np.arange(0, release, 1 / fs) / release)
 

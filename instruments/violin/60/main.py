@@ -1,7 +1,8 @@
-from pathlib import Path
+import sys
+from pathlib import Path; sys.path.insert(0, str(Path('..') / Path('..') / Path('..')))
 import scipy.io.wavfile as wav
 import scipy.signal as sig
-from instruments.synthetic.generation_signal.signal_generation import pad_and_cut
+from utils import pad_and_cut
 from plot import plot_figures
 import numpy as np
 import matplotlib.pyplot as plt

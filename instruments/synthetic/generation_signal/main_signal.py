@@ -1,5 +1,4 @@
 import pickle
-
 from signal_generation import generate_harmonic, pad_and_smooth, generate_inharmonic
 import matplotlib.pyplot as plt
 import scipy.io.wavfile as wav

@@ -1,7 +1,8 @@
-from pathlib import Path
+import sys
+from pathlib import Path; sys.path.insert(0, str(Path('..') / Path('..') / Path('..')))
 import scipy.io.wavfile as wav
 import scipy.signal as sig
-from instruments.synthetic.generation_signal.signal_generation import pad_and_cut
+from utils import pad_and_cut
 import numpy as np
 import matplotlib.pyplot as plt
 from time import time
@@ -12,7 +13,6 @@ from utils import save_pickle
 from skeleton import skeleton
 
 plot = True
-show = True
 fig_size = (640, 360)
 
 # Input
@@ -192,10 +192,7 @@ if plot:
     start = time()
     plot_figures(Path('.'), fig_size=fig_size)
     print('Time to plot and save: %.3f' % (time() - start))
-
-    # Show
-    if show:
-        plt.show()
+    plt.show()
 
 
 if __name__ == '__main__':
