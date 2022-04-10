@@ -88,6 +88,180 @@ def recover_vectors_bis(spectrogram, time_vector, stft_frequencies, time_resolut
     return resulting_arrays
 
 
+def split_in_connected_components(non_minimal_frequencies):
+    connected_components = []
+
+    connected_component = []
+    for k, idx in enumerate(non_minimal_frequencies):
+        if k == 0:
+            connected_component.append(idx)
+        else:
+            if idx - non_minimal_frequencies[k-1] == 1:
+                connected_component.append(idx)
+            else:
+                connected_components.append(connected_component)
+                connected_component = [idx]
+        if k == len(non_minimal_frequencies) - 1:
+            if len(connected_component) != 0:
+                connected_components.append(connected_component)
+    return connected_components
+
+
+def pick_starting_frequencies(connected_components, n, spectrogram):
+    starting_frequencies = []
+    for connected_component in connected_components:
+        min_idx = min(connected_component)
+        max_idx = max(connected_component)
+        starting_frequency = np.argmax(spectrogram[min_idx: max_idx + 1, n]) + min_idx
+        starting_frequencies.append(starting_frequency)
+    return starting_frequencies
+
+
+def follow_the_ridge(spectrogram, n, starting_frequency, low_width, high_width, minimal_value,
+                     time_vector, stft_frequencies, linking_bins):
+    timestamps = [time_vector[n]]
+    frequencies = [stft_frequencies[starting_frequency]]
+    amplitudes = [2 * 10 ** (spectrogram[starting_frequency, n] / 20)]
+
+    current_time_index = n
+    current_frequency_index = starting_frequency
+
+    current_linking_tolerance = 0
+
+    while current_time_index + 1 < spectrogram.shape[1]:
+        # Put current spectrogram slice to minimal value
+        spectrogram[current_frequency_index - low_width: current_frequency_index + high_width, current_time_index] = \
+            minimal_value
+
+        # Get new slice
+        spectrogram_slice = spectrogram[
+                            current_frequency_index - low_width: current_frequency_index + high_width,
+                            current_time_index + 1
+                            ]
+
+        amplitude_value = spectrogram_slice.max()
+        if amplitude_value > minimal_value:
+            amplitudes.append(2 * 10 ** (amplitude_value / 20))
+
+            next_frequency = np.argmax(spectrogram_slice) + current_frequency_index - low_width
+
+            timestamps.append(time_vector[current_time_index + 1])
+            frequencies.append(stft_frequencies[next_frequency])
+        else:
+            current_linking_tolerance += 1
+
+            if current_linking_tolerance > linking_bins:
+                break
+            else:
+                next_frequency = current_frequency_index
+
+        # Update
+        current_frequency_index = next_frequency
+        current_time_index += 1
+
+    return timestamps, frequencies, amplitudes
+
+
+def ridge_following(spectrogram, time_vector, stft_frequencies, neighbourhood_width,
+                    threshold_duration, linking_time, time_resolution):
+    resulting_arrays = []
+
+    threshold_duration_bins = int(threshold_duration / time_resolution)
+    linking_bins = int(linking_time / time_resolution)
+
+    minimal_value = spectrogram.min()
+
+    low_width = neighbourhood_width - neighbourhood_width // 2 - 1
+    high_width = neighbourhood_width - low_width
+    for n in range(spectrogram.shape[1]):
+        if np.any(spectrogram[:, n] > minimal_value):
+            non_minimal_frequencies = np.where(spectrogram[:, n] > minimal_value)[0]
+            connected_components = split_in_connected_components(non_minimal_frequencies)
+            starting_frequencies = pick_starting_frequencies(connected_components, n, spectrogram)
+            for starting_frequency in starting_frequencies:
+                # if 740 < starting_frequency < 760:
+                #     print('')
+                timestamps, frequencies, amplitudes = \
+                    follow_the_ridge(spectrogram, n, starting_frequency, low_width, high_width, minimal_value,
+                                     time_vector, stft_frequencies, linking_bins)
+                if len(frequencies) > threshold_duration_bins:
+                    resulting_array = np.array((frequencies, timestamps, amplitudes))
+                    resulting_arrays.append(resulting_array)
+
+    return resulting_arrays
+
+
+def follow_the_path(spectrogram, mask, n, starting_frequency, low_width, high_width,
+                    time_vector, stft_frequencies, linking_bins):
+    timestamps = [time_vector[n]]
+    frequencies = [stft_frequencies[starting_frequency]]
+    amplitudes = [2 * 10 ** (spectrogram[starting_frequency, n] / 20)]
+
+    current_time_index = n
+    current_frequency_index = starting_frequency
+
+    current_linking_tolerance = 0
+
+    while current_time_index + 1 < spectrogram.shape[1]:
+        # Put current mask slice to 0
+        mask[current_frequency_index - low_width: current_frequency_index + high_width, current_time_index] = 0
+
+        # Get new slice
+        mask_slice = mask[
+                            current_frequency_index - low_width: current_frequency_index + high_width,
+                            current_time_index + 1
+                            ]
+
+        if np.any(mask_slice) > 0:
+            index = np.where(mask_slice > 0)[0]
+            assert index.shape[0] == 1
+            index = index[0]
+
+            next_frequency_index = index + current_frequency_index - low_width
+
+            amplitude_value = spectrogram[next_frequency_index, current_time_index]
+
+            amplitudes.append(2 * 10 ** (amplitude_value / 20))
+            timestamps.append(time_vector[current_time_index + 1])
+            frequencies.append(stft_frequencies[next_frequency_index])
+        else:
+            current_linking_tolerance += 1
+
+            if current_linking_tolerance > linking_bins:
+                break
+            else:
+                next_frequency_index = current_frequency_index
+
+        # Update
+        current_frequency_index = next_frequency_index
+        current_time_index += 1
+
+    return timestamps, frequencies, amplitudes
+
+
+def path_following(spectrogram, mask, time_vector, stft_frequencies, neighbourhood_width,
+                   threshold_duration, linking_time, time_resolution):
+    resulting_arrays = []
+
+    threshold_duration_bins = int(threshold_duration / time_resolution)
+    linking_bins = int(linking_time / time_resolution)
+
+    low_width = neighbourhood_width - neighbourhood_width // 2 - 1
+    high_width = neighbourhood_width - low_width
+    for n in range(spectrogram.shape[1]):
+        if np.any(mask[:, n] > 0):
+            starting_frequencies = np.where(mask[:, n] > 0)[0]
+            for starting_frequency in starting_frequencies:
+                timestamps, frequencies, amplitudes = \
+                    follow_the_path(spectrogram, mask, n, starting_frequency, low_width, high_width,
+                                    time_vector, stft_frequencies, linking_bins)
+                if len(frequencies) > threshold_duration_bins:
+                    resulting_array = np.array((frequencies, timestamps, amplitudes))
+                    resulting_arrays.append(resulting_array)
+
+    return resulting_arrays
+
+
 def recover_vectors_no_tqdm(spectrograms, time_vector, stft_frequencies, frequency_steps_erosion, time_resolution,
                             threshold_amplitude, threshold_duration):
     threshold_duration_bins = int(threshold_duration / time_resolution)
