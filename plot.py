@@ -236,11 +236,12 @@ def plot_time_frequency_2(a_0, a_1, t, f, v_min=0, v_max=1, c_map='Greys',
                         origin='lower', interpolation=interpolation)
 
     if color_bar:
-        c_bar_0 = fig.colorbar(im_0, ax=ax[0])
-        c_bar_0.ax.set_title('Puissance (dB)', fontsize=8)
+        if not v_min == 0 and v_max == 1:
+            c_bar_0 = fig.colorbar(im_0, ax=ax[0])
+            c_bar_0.ax.set_title('Puissance (dB)', fontsize=8)
 
-        c_bar_1 = fig.colorbar(im_1, ax=ax[1])
-        c_bar_1.ax.set_title('Puissance (dB)', fontsize=8)
+            c_bar_1 = fig.colorbar(im_1, ax=ax[1])
+            c_bar_1.ax.set_title('Puissance (dB)', fontsize=8)
 
     plt.tight_layout()
 
@@ -309,8 +310,8 @@ def plot_time_frequency_top_hat(a_0, a_1, t, f, v_min=0, v_max=1, c_map='Greys',
         c_bar_0 = fig.colorbar(im_0, ax=ax[0])
         c_bar_0.ax.set_title('Puissance (dB)', fontsize=8)
 
-        c_bar_1 = fig.colorbar(im_1, ax=ax[1])
-        c_bar_1.ax.set_title('Puissance (dB)', fontsize=8)
+        # c_bar_1 = fig.colorbar(im_1, ax=ax[1])
+        # c_bar_1.ax.set_title('Puissance (dB)', fontsize=8)
 
     plt.tight_layout()
 
@@ -505,3 +506,112 @@ def plot_figures(folder, fig_size=(640, 360)):
     fig.axes[0].set_xlim([0. / time_resolution, duration_synth / time_resolution])
     fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
+
+
+def plot_figures_paper(folder, fig_size=(640, 360), save=False):
+    # Load parameters
+    plot_parameters = pickle.load(open(folder / Path('parameters') / 'plot_parameters.pickle', 'rb'))
+
+    time_resolution = plot_parameters['time_resolution']
+    duration_synth = plot_parameters['duration_synth']
+    t_fft = plot_parameters['t_fft']
+    padding_factor = plot_parameters['padding_factor']
+
+    # Load arrays
+    arrays_folder = folder / Path('arrays')
+
+    tau = np.load(arrays_folder / 'tau.npy')
+    omega = np.load(arrays_folder / 'omega.npy')
+
+    spectrogram_input = np.load(arrays_folder / 'spectrogram_input.npy')
+    closing = np.load(arrays_folder / 'closing.npy')
+    top_hat_binary = np.load(arrays_folder / 'top_hat_binary.npy')
+    top_hat_skeleteon = np.load(arrays_folder / 'top_hat_skeleteon.npy')
+    opening = np.load(arrays_folder / 'opening.npy')
+    filtered_noise_db = np.load(arrays_folder / 'filtered_noise_db.npy')
+    spectrogram_output = np.load(arrays_folder / 'spectrogram_output.npy')
+
+    if save:
+        figures_path = Path('figures')
+        figures_path.mkdir(parents=True, exist_ok=True)
+    else:
+        figures_path = None
+
+    # Input
+    fig = plot_time_frequency(spectrogram_input, tau, omega, v_min=-120, v_max=0, resolution='s',
+                              time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0.8 / time_resolution, 5.2 / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 4000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_input.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Closing
+    fig = plot_time_frequency_2(spectrogram_input, closing, tau, omega, v_min=-120, v_max=0, resolution='s',
+                                time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_closing.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Top-hat vs closing
+    fig = plot_time_frequency_top_hat(closing, top_hat_binary, tau, omega, v_min=-120, v_max=0, resolution='s',
+                                      time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size,
+                                      show=False)
+    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_top-hat.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Skeleton
+    fig = plot_time_frequency_2(top_hat_binary, top_hat_skeleteon, tau, omega, v_min=0, v_max=1, resolution='s',
+                                time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_skeleton.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Opening
+    fig = plot_time_frequency(opening, tau, omega, v_min=-120, v_max=0, resolution='s',
+                              time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    # plt.savefig('figure_opening.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # # White noise
+    # fig = plot_time_frequency(white_noise_db, tau, omega, v_min=-120, v_max=0, resolution='s',
+    #                           time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    # fig.axes[0].set_xlim([0.8 / time_resolution, 5.5 / time_resolution])
+    # fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
+    # plt.tight_layout()
+    # # plt.savefig('figure_white_noise.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Filtered noise
+    fig = plot_time_frequency(filtered_noise_db, tau, omega, v_min=-120, v_max=0, resolution='s',
+                              time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0. / time_resolution, duration_synth / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    # plt.savefig('figure_filtered_noise.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Output
+    fig = plot_time_frequency(spectrogram_output, tau, omega, v_min=-120, v_max=0, resolution='s',
+                              time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0. / time_resolution, duration_synth / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    # plt.savefig('figure_output.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+    # plt.savefig('figure_output.png', pad_inches=0, transparent=False)
+
+    # Input vs Output
+    fig = plot_time_frequency_2(spectrogram_input, spectrogram_output, tau, omega, v_min=-120, v_max=0, resolution='s',
+                                time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0. / time_resolution, duration_synth / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+
+    plt.show()
