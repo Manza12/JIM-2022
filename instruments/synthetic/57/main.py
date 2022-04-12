@@ -5,7 +5,6 @@ import scipy.signal as sig
 from utils import pad_and_cut
 from plot import plot_figures_paper
 import numpy as np
-import matplotlib.pyplot as plt
 from time import time
 import scipy.ndimage.morphology as morpho
 from synthesis import synthesize_from_arrays, synthesize_noise_mask, path_following
@@ -83,11 +82,9 @@ top_hat_binary = np.zeros_like(closing, dtype=np.int8)
 top_hat_binary[top_hat > threshold] = 1
 
 # Skeletonize the top-hat
-str_el_skull_1 = np.ones((3, 1), dtype=bool)
-str_el_skull_2 = np.ones((2, 1), dtype=bool)
 
-top_hat_skeleteon = skeleton(top_hat_binary, str_el_skull_1)
-top_hat_skeleteon = skeleton(top_hat_skeleteon, str_el_skull_2)
+top_hat_skeleteon = skeleton(top_hat_binary)
+# top_hat_skeleteon = skeleton(top_hat_skeleteon, str_el_skull_2)
 
 # Create detector food image
 detector_food = np.copy(top_hat_skeleteon)

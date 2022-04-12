@@ -81,7 +81,7 @@ wav.write(folder / Path('synthetic_' + str(note) + '_harmonic.wav'), fs, signal_
 wav.write(folder / Path('synthetic_' + str(note) + '_inharmonic.wav'), fs, signal_inharmonic)
 wav.write(folder / Path('synthetic_' + str(note) + '.wav'), fs, signal)
 
-pickle.dump(parameters, open(folder / Path('parameters.pickle'), 'wb'))
+pickle.dump(parameters, open(folder / Path('parameters') / Path('generation_parameters.pickle'), 'wb'))
 
 
 # Plot

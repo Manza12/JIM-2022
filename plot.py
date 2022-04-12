@@ -511,11 +511,21 @@ def plot_figures(folder, fig_size=(640, 360)):
 def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     # Load parameters
     plot_parameters = pickle.load(open(folder / Path('parameters') / 'plot_parameters.pickle', 'rb'))
+    synthesis_parameters = pickle.load(open(folder / Path('parameters') / 'synthesis_parameters.pickle', 'rb'))
+    generation_parameters = pickle.load(open(folder / Path('parameters') / 'generation_parameters.pickle', 'rb'))
 
     time_resolution = plot_parameters['time_resolution']
     duration_synth = plot_parameters['duration_synth']
     t_fft = plot_parameters['t_fft']
     padding_factor = plot_parameters['padding_factor']
+
+    # Create ground truth
+    import sys
+    sys.path.insert(0, str(Path('..') / Path('..') / Path('..')))
+    from instruments.synthetic.generation_signal.signal_generation import generate_harmonic_data
+    generation_parameters['init_rest'] = 1
+
+    ground_truth = generate_harmonic_data(**generation_parameters)
 
     # Load arrays
     arrays_folder = folder / Path('arrays')
@@ -573,6 +583,13 @@ def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     plt.tight_layout()
     if save:
         plt.savefig(figures_path / 'figure_skeleton.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Plot results against ground truth
+    fig = plot_harmonics_ground_truth(synthesis_parameters['harmonic'], ground_truth, 'all', step=12)
+    fig.axes[0].set_xlim([0.8, 5.2])
+    fig.axes[0].set_ylim([-100, 0.])
+    plt.tight_layout()
+    plt.savefig(figures_path / 'figure_amplitudes.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
     # Opening
     fig = plot_time_frequency(opening, tau, omega, v_min=-120, v_max=0, resolution='s',
