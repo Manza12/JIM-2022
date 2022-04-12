@@ -85,18 +85,21 @@ pickle.dump(parameters, open(folder / Path('parameters.pickle'), 'wb'))
 
 
 # Plot
-def plot_signal(s, x):
-    fig = plt.figure()
+def plot_signal(s, x, name=''):
+    fig = plt.figure(figsize=(3., 1.5))
     plt.plot(x, s)
-    plt.xlabel('Time (s)')
+    plt.xlabel('Temps (s)')
     plt.ylabel('Amplitude')
+    plt.ylim([-0.2, 0.2])
+    plt.tight_layout()
+    plt.savefig('figure_' + name + '.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
     return fig
 
 
-plot_signal(signal_harmonic, t_har)
-plot_signal(signal_inharmonic, t_inh)
-plot_signal(signal, t)
+plot_signal(signal_harmonic, t_har, 'signal_harmonic')
+plot_signal(signal_inharmonic, t_inh, 'signal_non-harmonic')
+plot_signal(signal, t, 'signal_sum')
 
 plt.show()
 
