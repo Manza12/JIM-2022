@@ -197,7 +197,7 @@ np.save(str(arrays_path / 'spectrogram_resynth_non-harmonic.npy'), spectrogram_r
 # Plot
 if plot:
     start = time()
-    plot_figures(Path('.'), fig_size=fig_size, save=True)
+    plot_figures(Path('.'), fig_size=fig_size)
     print('Time to plot and save: %.3f' % (time() - start))
 
 
