@@ -11,7 +11,7 @@ from synthesis import synthesize_from_arrays, synthesize_noise_mask, path_follow
 from utils import save_pickle
 from skeleton import skeleton
 
-plot = True
+plot = False
 fig_size = (640, 360)
 
 # Input
@@ -106,8 +106,8 @@ erosion = morpho.grey_erosion(opening, structure=str_el_ero)
 print('Time to morphology: %.3f' % (time() - start))
 
 # Recover parameters
-threshold_duration = 0.1
-linking_time = 0.1
+threshold_duration = 0.
+linking_time = 0.
 neighbourhood_width = top_hat_width
 
 start = time()
