@@ -83,11 +83,10 @@ top_hat_binary[top_hat > threshold] = 1
 
 # Skeletonize the top-hat
 
-top_hat_skeleteon = skeleton(top_hat_binary)
-# top_hat_skeleteon = skeleton(top_hat_skeleteon, str_el_skull_2)
+top_hat_skeleton = skeleton(top_hat_binary)
 
 # Create detector food image
-detector_food = np.copy(top_hat_skeleteon)
+detector_food = np.copy(top_hat_skeleton)
 
 # Opening
 opening_frequency_width = 100  # in Hertz
@@ -168,7 +167,7 @@ np.save(str(arrays_path / 'omega.npy'), omega)
 np.save(str(arrays_path / 'spectrogram_input.npy'), spectrogram_input)
 np.save(str(arrays_path / 'closing.npy'), closing)
 np.save(str(arrays_path / 'top_hat_binary.npy'), top_hat_binary)
-np.save(str(arrays_path / 'top_hat_skeleteon.npy'), top_hat_skeleteon)
+np.save(str(arrays_path / 'top_hat_skeleton.npy'), top_hat_skeleton)
 np.save(str(arrays_path / 'opening.npy'), opening)
 np.save(str(arrays_path / 'filtered_noise_db.npy'), filtered_noise_db)
 np.save(str(arrays_path / 'spectrogram_output.npy'), spectrogram_output)
