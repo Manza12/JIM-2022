@@ -126,7 +126,7 @@ synthesized_non_harmonic, time_noise, white_noise_stft, filtered_noise_stft = sy
                                                                                                     size=size,
                                                                                                     **stft_parameters,
                                                                                                     )
-synthesized = synthesized_harmonic + synthesized_non_harmonic
+synthesized = synthesized_harmonic + synthesized_non_harmonic[:len(synthesized_harmonic)]
 
 white_noise_db = 10 * np.log10(np.abs(white_noise_stft)**2 + eps)
 filtered_noise_db = 10 * np.log10(np.abs(filtered_noise_stft)**2 + eps)

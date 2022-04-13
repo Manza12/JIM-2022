@@ -463,6 +463,14 @@ def plot_figures(folder, fig_size=(640, 360), save=False):
     fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
 
+    # Input vs skeleton
+    fig = plot_time_frequency_top_hat(spectrogram_input, top_hat_skeleton, tau, omega, v_min=-120, v_max=0,
+                                      resolution='s', time_label='Temps (s)', freq_label='Fréquence (Hz)',
+                                      fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0. / time_resolution, duration_synth / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+
     # Non-harmonic
     fig = plot_time_frequency_2(spectrogram_input, spectrogram_non_harmonic, tau, omega, v_min=-120, v_max=0,
                                 resolution='s', time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size,
