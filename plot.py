@@ -466,6 +466,91 @@ def plot_figures(folder, fig_size=(640, 360)):
 def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     # Load parameters
     plot_parameters = pickle.load(open(folder / Path('parameters') / 'plot_parameters.pickle', 'rb'))
+
+    time_resolution = plot_parameters['time_resolution']
+    t_fft = plot_parameters['t_fft']
+    padding_factor = plot_parameters['padding_factor']
+
+    # Load arrays
+    arrays_folder = folder / Path('arrays')
+
+    tau = np.load(arrays_folder / 'tau.npy')
+    omega = np.load(arrays_folder / 'omega.npy')
+
+    spectrogram_input = np.load(arrays_folder / 'spectrogram_input.npy')
+    closing = np.load(arrays_folder / 'closing.npy')
+    top_hat_binary = np.load(arrays_folder / 'top_hat_binary.npy')
+    top_hat_skeleton = np.load(arrays_folder / 'top_hat_skeleton.npy')
+    opening = np.load(arrays_folder / 'opening.npy')
+    erosion = np.load(arrays_folder / 'erosion.npy')
+
+    if save:
+        figures_path = Path('figures')
+        figures_path.mkdir(parents=True, exist_ok=True)
+    else:
+        figures_path = None
+
+    # Input
+    fig = plot_time_frequency(spectrogram_input, tau, omega, v_min=-120, v_max=0, resolution='s',
+                              time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0.8 / time_resolution, 5.2 / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 4000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_input.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Closing
+    fig = plot_time_frequency_2(spectrogram_input, closing, tau, omega, v_min=-120, v_max=0, resolution='s',
+                                time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_closing.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Top-hat vs closing
+    fig = plot_time_frequency_top_hat(closing, top_hat_binary, tau, omega, v_min=-120, v_max=0, resolution='s',
+                                      time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size,
+                                      show=False)
+    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_top-hat.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Skeleton
+    fig = plot_time_frequency_2(top_hat_binary, top_hat_skeleton, tau, omega, v_min=0, v_max=1, resolution='s',
+                                time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_skeleton.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Opening
+    fig = plot_time_frequency_2(closing, opening, tau, omega, v_min=-120, v_max=0, resolution='s',
+                                time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_opening.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    # Erosion
+    fig = plot_time_frequency_2(opening, erosion, tau, omega, v_min=-120, v_max=0, resolution='s',
+                                time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0.9 / time_resolution, 1.2 / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_erosion.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
+    plt.show()
+
+
+def plot_figures_paper_reference_signal(folder, fig_size=(640, 360), save=False):
+    # Load parameters
+    plot_parameters = pickle.load(open(folder / Path('parameters') / 'plot_parameters.pickle', 'rb'))
     synthesis_parameters = pickle.load(open(folder / Path('parameters') / 'synthesis_parameters.pickle', 'rb'))
     generation_parameters = pickle.load(open(folder / Path('parameters') / 'generation_parameters.pickle', 'rb'))
 
@@ -539,7 +624,7 @@ def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     if save:
         plt.savefig(figures_path / 'figure_skeleton.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
-    # Plot results against ground truth
+    # Plot results in harmonic part against ground truth
     fig = plot_harmonics_ground_truth(synthesis_parameters['harmonic'], ground_truth, 'all', step=12)
     fig.axes[0].set_xlim([0.8, 5.2])
     fig.axes[0].set_ylim([-100, 0.])
@@ -565,7 +650,7 @@ def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     if save:
         plt.savefig(figures_path / 'figure_erosion.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
-    # Filtered noise
+    # Plot results in non-harmonic part against ground truth
     fig = plot_time_frequency_2(spectrogram_non_harmonic, spectrogram_resynth_non_harmonic_db, tau, omega, v_min=-120,
                                 v_max=0, resolution='s', time_label='Temps (s)', freq_label='Fréquence (Hz)',
                                 fig_size=fig_size, show=False)
