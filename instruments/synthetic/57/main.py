@@ -3,7 +3,7 @@ from pathlib import Path; sys.path.insert(0, str(Path('..') / Path('..') / Path(
 import scipy.io.wavfile as wav
 import scipy.signal as sig
 from utils import pad_and_cut
-from plot import plot_figures_paper_reference_signal
+from plot import plot_figures_reference_signal
 import numpy as np
 from time import time
 import scipy.ndimage.morphology as morpho
@@ -216,7 +216,7 @@ np.save(str(arrays_path / 'spectrogram_resynth_non-harmonic.npy'), spectrogram_r
 # Plot
 if plot:
     start = time()
-    plot_figures_paper_reference_signal(Path('.'), fig_size=fig_size, save=True)
+    plot_figures_reference_signal(Path('.'), fig_size=fig_size, save=True)
     print('Time to plot and save: %.3f' % (time() - start))
 
 
