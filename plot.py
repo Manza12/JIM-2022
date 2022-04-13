@@ -436,6 +436,16 @@ def plot_figures(folder, fig_size=(640, 360), save=False):
     if save:
         plt.savefig(figures_path / 'figure_skeleton.eps', bbox_inches='tight', pad_inches=0, transparent=True)
 
+    # Input vs skeleton
+    fig = plot_time_frequency_top_hat(spectrogram_input, top_hat_skeleton, tau, omega, v_min=-120, v_max=0,
+                                      resolution='s', time_label='Temps (s)', freq_label='Fréquence (Hz)',
+                                      fig_size=fig_size, show=False)
+    fig.axes[0].set_xlim([0. / time_resolution, duration_synth / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
+    plt.tight_layout()
+    if save:
+        plt.savefig(figures_path / 'figure_input-skeleton.eps', bbox_inches='tight', pad_inches=0, transparent=True)
+
     # Opening
     fig = plot_time_frequency_2(closing, opening, tau, omega, v_min=-120, v_max=0, resolution='s',
                                 time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
