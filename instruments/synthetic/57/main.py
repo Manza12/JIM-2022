@@ -19,6 +19,8 @@ names_list = Path('.').absolute().as_posix().split('/')
 note = names_list[-1]
 instrument = names_list[-2]
 signal_path = Path(instrument + '_' + note + '.wav')
+signal_harmonic_path = Path(instrument + '_' + note + '_harmonic.wav')
+signal_non_harmonic_path = Path(instrument + '_' + note + '_inharmonic.wav')
 
 duration = 4.  # in seconds
 init_rest = 1.  # in seconds
@@ -29,13 +31,20 @@ duration_synth = duration + init_rest + final_rest  # in seconds
 fs, signal = wav.read(signal_path)
 signal = pad_and_cut(signal, duration, fs, init_rest, final_rest, fade_out)
 
+# Harmonic and non-harmonic
+_, signal_harmonic = wav.read(signal_harmonic_path)
+_, signal_non_harmonic = wav.read(signal_non_harmonic_path)
+
+signal_harmonic = pad_and_cut(signal_harmonic, duration, fs, init_rest, final_rest, fade_out)
+signal_non_harmonic = pad_and_cut(signal_non_harmonic, duration, fs, init_rest, final_rest, fade_out)
+
 # STFT
 ts = 1 / fs  # in seconds
 time_resolution = 0.01  # in seconds
 t_fft = 0.1  # seconds
-n_fft = int(fs * t_fft)  # in samples
+window_size = int(fs * t_fft)  # in samples
 padding_factor = 2
-n_fft = n_fft * padding_factor  # in samples
+n_fft = window_size * padding_factor  # in samples
 frequency_precision = fs / n_fft  # in Hertz
 win_length = int(t_fft * fs)
 hop_length = int(fs * time_resolution)
@@ -52,10 +61,18 @@ stft_parameters = {
 
 start = time()
 omega, tau, stft = sig.stft(signal, **stft_parameters)
+_, _, stft_harmonic = sig.stft(signal_harmonic, **stft_parameters)
+_, _, stft_non_harmonic = sig.stft(signal_non_harmonic, **stft_parameters)
 print('Time to STFT of input: %.3f' % (time() - start))
 
 spectrogram = np.abs(stft)**2
 spectrogram_input = 10 * np.log10(spectrogram + eps)
+
+spectrogram_harmonic = np.abs(stft_harmonic)**2
+spectrogram_non_harmonic = np.abs(stft_non_harmonic)**2
+
+spectrogram_harmonic_db = 10 * np.log10(spectrogram_harmonic + eps)
+spectrogram_non_harmonic_db = 10 * np.log10(spectrogram_non_harmonic + eps)
 
 # Morphology
 start = time()
@@ -82,7 +99,6 @@ top_hat_binary = np.zeros_like(closing, dtype=np.int8)
 top_hat_binary[top_hat > threshold] = 1
 
 # Skeletonize the top-hat
-
 top_hat_skeleton = skeleton(top_hat_binary)
 
 # Create detector food image
@@ -95,6 +111,14 @@ opening_width = int(opening_frequency_width / frequency_precision)  # in samples
 str_el_ope = np.zeros((opening_width, 1))
 
 opening = morpho.grey_opening(closing, structure=str_el_ope)
+
+# Erosion
+erosion_time_width = int(t_fft / time_resolution)
+window_shape = sig.windows.get_window(window, erosion_time_width)
+erosion_shape = 10 * np.log10(window_shape + eps)
+str_el_ero = np.expand_dims(erosion_shape, 0)
+
+erosion = morpho.grey_erosion(opening, structure=str_el_ero)
 
 print('Time to morphology: %.3f' % (time() - start))
 
@@ -110,12 +134,15 @@ print('Time to recover vectors: %.3f' % (time() - start))
 
 # Synthesis
 start = time()
-noise_normalization = 'max'
+noise_normalization = 'morphological'
+size = 20
 synthesized_harmonic, time_harmonic = synthesize_from_arrays(output_arrays, duration_synth, fs)
-synthesized_non_harmonic, time_noise, white_noise_stft, filtered_noise_stft = synthesize_noise_mask(opening,
+synthesized_non_harmonic, time_noise, white_noise_stft, filtered_noise_stft = synthesize_noise_mask(erosion,
                                                                                                     duration_synth,
                                                                                                     noise_normalization,
-                                                                                                    **stft_parameters)
+                                                                                                    size=size,
+                                                                                                    **stft_parameters,
+                                                                                                    )
 synthesized = synthesized_harmonic + synthesized_non_harmonic
 
 white_noise_db = 10 * np.log10(np.abs(white_noise_stft)**2 + eps)
@@ -125,10 +152,17 @@ print('Time to synthesize: %.3f' % (time() - start))
 # Spectrogram of synthesis
 start = time()
 _, _, stft_resynth = sig.stft(synthesized, **stft_parameters)
+_, _, stft_resynth_harmonic = sig.stft(synthesized_harmonic, **stft_parameters)
+_, _, stft_resynth_non_harmonic = sig.stft(synthesized_non_harmonic, **stft_parameters)
 print('Time to STFT of output: %.3f' % (time() - start))
 
 spectrogram_resynth = np.abs(stft_resynth)**2
+spectrogram_resynth_harmonic = np.abs(stft_resynth_harmonic)**2
+spectrogram_resynth_non_harmonic = np.abs(stft_resynth_non_harmonic)**2
+
 spectrogram_output = 10 * np.log10(spectrogram_resynth + eps)
+spectrogram_resynth_harmonic_db = 10 * np.log10(spectrogram_resynth_harmonic + eps)
+spectrogram_resynth_non_harmonic_db = 10 * np.log10(spectrogram_resynth_non_harmonic + eps)
 
 # Write parameters
 parameters_path = Path('parameters')
@@ -165,12 +199,18 @@ np.save(str(arrays_path / 'tau.npy'), tau)
 np.save(str(arrays_path / 'omega.npy'), omega)
 
 np.save(str(arrays_path / 'spectrogram_input.npy'), spectrogram_input)
+np.save(str(arrays_path / 'spectrogram_harmonic.npy'), spectrogram_harmonic_db)
+np.save(str(arrays_path / 'spectrogram_non-harmonic.npy'), spectrogram_non_harmonic_db)
 np.save(str(arrays_path / 'closing.npy'), closing)
 np.save(str(arrays_path / 'top_hat_binary.npy'), top_hat_binary)
 np.save(str(arrays_path / 'top_hat_skeleton.npy'), top_hat_skeleton)
 np.save(str(arrays_path / 'opening.npy'), opening)
+np.save(str(arrays_path / 'erosion.npy'), erosion)
+np.save(str(arrays_path / 'white_noise_db.npy'), white_noise_db)
 np.save(str(arrays_path / 'filtered_noise_db.npy'), filtered_noise_db)
 np.save(str(arrays_path / 'spectrogram_output.npy'), spectrogram_output)
+np.save(str(arrays_path / 'spectrogram_resynth_harmonic.npy'), spectrogram_resynth_harmonic_db)
+np.save(str(arrays_path / 'spectrogram_resynth_non-harmonic.npy'), spectrogram_resynth_non_harmonic_db)
 
 
 # Plot

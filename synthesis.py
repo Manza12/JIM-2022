@@ -352,7 +352,7 @@ def synthesize_noise_from_image(signal_size, device, stft_layer, eps, spectrogra
     return white_noise_db, filtered_noise_db, filtered_noise_numpy
 
 
-def synthesize_noise_mask(mask, duration, normalization='max', **stft_parameters):
+def synthesize_noise_mask(mask, duration, normalization='max', size=None, **stft_parameters):
     N = int(duration * stft_parameters['fs'])
 
     # Create noise
@@ -366,6 +366,13 @@ def synthesize_noise_mask(mask, duration, normalization='max', **stft_parameters
     elif normalization == 'max':
         log_max = np.max(10 * np.log10(np.abs(white_noise_stft) ** 2))
         white_noise_normalized_stft = white_noise_stft / 10**(log_max / 20)
+    elif normalization == 'morphological':
+        if size is None:
+            size = 10
+        from scipy.ndimage.morphology import grey_closing
+        spectrogram_noise_db = 10 * np.log10(np.abs(white_noise_stft) ** 2)
+        closed_noise = grey_closing(spectrogram_noise_db, size=size)
+        white_noise_normalized_stft = white_noise_stft / 10**(closed_noise / 20)
     else:
         white_noise_normalized_stft = white_noise_stft
 
@@ -383,4 +390,3 @@ def interpolate(time_array, timestamps, y, interpolation_type='linear'):
         return np.interp(time_array, timestamps, y)
     elif interpolation_type == 'fourier':
         return sig.resample(y, len(time_array))
-
