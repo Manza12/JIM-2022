@@ -493,8 +493,8 @@ def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     # Input
     fig = plot_time_frequency(spectrogram_input, tau, omega, v_min=-120, v_max=0, resolution='s',
                               time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
-    fig.axes[0].set_xlim([0.8 / time_resolution, 5.2 / time_resolution])
-    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 4000. * (t_fft * padding_factor)])
+    fig.axes[0].set_xlim([0. / time_resolution, 6. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
     if save:
         plt.savefig(figures_path / 'figure_input.eps', bbox_inches='tight', pad_inches=0, transparent=True)
@@ -502,8 +502,8 @@ def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     # Closing
     fig = plot_time_frequency_2(spectrogram_input, closing, tau, omega, v_min=-120, v_max=0, resolution='s',
                                 time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
-    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
-    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    fig.axes[0].set_xlim([0. / time_resolution, 6. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
     if save:
         plt.savefig(figures_path / 'figure_closing.eps', bbox_inches='tight', pad_inches=0, transparent=True)
@@ -512,8 +512,8 @@ def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     fig = plot_time_frequency_top_hat(closing, top_hat_binary, tau, omega, v_min=-120, v_max=0, resolution='s',
                                       time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size,
                                       show=False)
-    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
-    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    fig.axes[0].set_xlim([0. / time_resolution, 6. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
     if save:
         plt.savefig(figures_path / 'figure_top-hat.eps', bbox_inches='tight', pad_inches=0, transparent=True)
@@ -521,8 +521,8 @@ def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     # Skeleton
     fig = plot_time_frequency_2(top_hat_binary, top_hat_skeleton, tau, omega, v_min=0, v_max=1, resolution='s',
                                 time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
-    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
-    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    fig.axes[0].set_xlim([0. / time_resolution, 6. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
     if save:
         plt.savefig(figures_path / 'figure_skeleton.eps', bbox_inches='tight', pad_inches=0, transparent=True)
@@ -530,8 +530,8 @@ def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     # Opening
     fig = plot_time_frequency_2(closing, opening, tau, omega, v_min=-120, v_max=0, resolution='s',
                                 time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
-    fig.axes[0].set_xlim([0.9 / time_resolution, 2. / time_resolution])
-    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    fig.axes[0].set_xlim([0. / time_resolution, 6. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
     if save:
         plt.savefig(figures_path / 'figure_opening.eps', bbox_inches='tight', pad_inches=0, transparent=True)
@@ -539,8 +539,8 @@ def plot_figures_paper(folder, fig_size=(640, 360), save=False):
     # Erosion
     fig = plot_time_frequency_2(opening, erosion, tau, omega, v_min=-120, v_max=0, resolution='s',
                                 time_label='Temps (s)', freq_label='Fréquence (Hz)', fig_size=fig_size, show=False)
-    fig.axes[0].set_xlim([0.9 / time_resolution, 1.2 / time_resolution])
-    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 500. * (t_fft * padding_factor)])
+    fig.axes[0].set_xlim([0. / time_resolution, 6. / time_resolution])
+    fig.axes[0].set_ylim([0. * (t_fft * padding_factor), 10000. * (t_fft * padding_factor)])
     plt.tight_layout()
     if save:
         plt.savefig(figures_path / 'figure_erosion.eps', bbox_inches='tight', pad_inches=0, transparent=True)
